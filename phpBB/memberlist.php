@@ -212,7 +212,7 @@ switch ($mode)
 
 		foreach ($groups_ary as $group_id => $group_data)
 		{
-			if ($group_data['group_teampage'])
+			if ($group_data['group_teampage'] && !empty($group_users[$group_id]) && array_intersect($group_users[$group_id], array_keys($user_ary)))
 			{
 				$template->assign_block_vars('group', array(
 					'GROUP_NAME'	=> $group_data['group_name'],
