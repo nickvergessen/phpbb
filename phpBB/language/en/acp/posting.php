@@ -239,9 +239,9 @@ $lang = array_merge($lang, array(
 
 	'DELETE_DISALLOW_EXPLAIN'	=> 'You can remove a disallowed username by selecting the username from this list and clicking submit.',
 	'DELETE_DISALLOW_TITLE'		=> 'Remove a disallowed username',
-	'DISALLOWED_ALREADY'		=> 'The name you entered could not be disallowed. It already exists in the list.',
+	'DISALLOWED_ALREADY'		=> 'The name you entered is already disallowed.',
 	'DISALLOWED_DELETED'		=> 'The disallowed username has been successfully removed.',
-	'DISALLOW_IN_USE'			=> 'The name you entered could not be disallowed. A matching username is present.',
+	'DISALLOW_IN_USE'			=> 'The name you entered could not be disallowed because there is a registered user matching it.',
 	'DISALLOW_SUCCESSFUL'		=> 'The disallowed username has been successfully added.',
 
 	'NO_DISALLOWED'				=> 'No disallowed usernames',
