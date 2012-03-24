@@ -161,9 +161,7 @@ class phpbb_log implements phpbb_log_interface
 				if ($phpbb_dispatcher != null)
 				{
 					$vars = array('mode', 'user_id', 'log_ip', 'log_operation', 'log_time', 'additional_data', 'sql_ary');
-					$event = new phpbb_event_data(compact($vars));
-					$phpbb_dispatcher->dispatch('core.add_log_case', $event);
-					extract($event->get_data_filtered($vars));
+					extract($phpbb_dispatcher->trigger_event('core.add_log_case', $vars, $vars));
 				}
 				*/
 
@@ -180,9 +178,7 @@ class phpbb_log implements phpbb_log_interface
 		if ($phpbb_dispatcher != null)
 		{
 			$vars = array('mode', 'user_id', 'log_ip', 'log_operation', 'log_time', 'additional_data', 'sql_ary');
-			$event = new phpbb_event_data(compact($vars));
-			$phpbb_dispatcher->dispatch('core.add_log', $event);
-			extract($event->get_data_filtered($vars));
+			extract($phpbb_dispatcher->trigger_event('core.add_log', $vars, $vars));
 		}
 		*/
 
@@ -199,6 +195,11 @@ class phpbb_log implements phpbb_log_interface
 	public function get_logs($mode, $count_logs = true, $limit = 0, $offset = 0, $forum_id = 0, $topic_id = 0, $user_id = 0, $log_time = 0, $sort_by = 'l.log_time DESC', $keywords = '')
 	{
 		global $db, $user, $auth, $phpEx, $phpbb_root_path, $phpbb_admin_path;
+		/**
+		* @todo: enable when events are merged
+		*
+		global $db, $user, $auth, $phpEx, $phpbb_root_path, $phpbb_admin_path, $phpbb_dispatcher;
+		*/
 
 		$this->logs_total = 0;
 		$this->logs_offset = $offset;
@@ -256,9 +257,7 @@ class phpbb_log implements phpbb_log_interface
 				if ($phpbb_dispatcher != null)
 				{
 					$vars = array('mode', 'count_logs', 'limit', 'offset', 'forum_id', 'topic_id', 'user_id', 'log_time', 'sort_by', 'keywords', 'profile_url', 'log_type', 'sql_additional');
-					$event = new phpbb_event_data(compact($vars));
-					$phpbb_dispatcher->dispatch('core.get_logs_switch_mode', $event);
-					extract($event->get_data_filtered($vars));
+					extract($phpbb_dispatcher->trigger_event('core.get_logs_switch_mode', $vars, $vars));
 				}
 				*/
 
@@ -275,9 +274,7 @@ class phpbb_log implements phpbb_log_interface
 		if ($phpbb_dispatcher != null)
 		{
 			$vars = array('mode', 'count_logs', 'limit', 'offset', 'forum_id', 'topic_id', 'user_id', 'log_time', 'sort_by', 'keywords', 'profile_url', 'log_type', 'sql_additional');
-			$event = new phpbb_event_data(compact($vars));
-			$phpbb_dispatcher->dispatch('core.get_logs_after_get_type', $event);
-			extract($event->get_data_filtered($vars));
+			extract($phpbb_dispatcher->trigger_event('core.get_logs_after_get_type', $vars, $vars));
 		}
 		*/
 
@@ -366,9 +363,7 @@ class phpbb_log implements phpbb_log_interface
 			if ($phpbb_dispatcher != null)
 			{
 				$vars = array('log_entry_data', 'row');
-				$event = new phpbb_event_data(compact($vars));
-				$phpbb_dispatcher->dispatch('core.get_logs_entry_data', $event);
-				extract($event->get_data_filtered($vars));
+				extract($phpbb_dispatcher->trigger_event('core.get_logs_entry_data', $vars, $vars));
 			}
 			*/
 
@@ -421,9 +416,7 @@ class phpbb_log implements phpbb_log_interface
 		if ($phpbb_dispatcher != null)
 		{
 			$vars = array('log', 'topic_id_list', 'reportee_id_list');
-			$event = new phpbb_event_data(compact($vars));
-			$phpbb_dispatcher->dispatch('core.get_logs_additional_data', $event);
-			extract($event->get_data_filtered($vars));
+			extract($phpbb_dispatcher->trigger_event('core.get_logs_additional_data', $vars, $vars));
 		}
 		*/
 
