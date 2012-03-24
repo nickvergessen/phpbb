@@ -76,6 +76,7 @@ require($phpbb_root_path . 'includes/session.' . $phpEx);
 require($phpbb_root_path . 'includes/auth.' . $phpEx);
 
 require($phpbb_root_path . 'includes/functions.' . $phpEx);
+require($phpbb_root_path . 'includes/functions_admin.' . $phpEx);
 require($phpbb_root_path . 'includes/functions_content.' . $phpEx);
 
 require($phpbb_root_path . 'includes/constants.' . $phpEx);
@@ -136,6 +137,10 @@ foreach ($cache->obtain_hooks() as $hook)
 // make sure add_log uses this log instance
 $phpbb_log = new phpbb_log(LOG_TABLE);
 add_log($phpbb_log); // "dependency injection" for a function
+// Parameter 2 and 3 are passed by reference, so we need to create a variable for it.
+$tmp_var = '';
+view_log($phpbb_log, $tmp_var, $tmp_var); // "dependency injection" for a function
+unset($tmp_var);
 
 if (!$config['use_system_cron'])
 {
