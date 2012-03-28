@@ -25,7 +25,7 @@ class phpbb_log implements phpbb_log_interface
 	/**
 	* Keeps the status of the log-system. Is the log enabled or disabled?
 	*/
-	private $enabled;
+	private $disabled_logs;
 
 	/**
 	* Keeps the total log count of the last call to get_logs()
@@ -56,31 +56,70 @@ class phpbb_log implements phpbb_log_interface
 	/**
 	* This function returns the state of the log-system.
 	*
-	* @return	bool	True if log is enabled
+	* @param	string	$type	The log type we want to check. Empty to get global log status.
+	*
+	* @return	bool	True if log for the type is enabled
 	*/
-	public function is_enabled()
+	public function is_enabled($type = '')
 	{
-		return $this->enabled;
+		if ($type == '' || $type == 'all')
+		{
+			return !isset($this->disabled_logs['all']);
+		}
+		return !isset($this->disabled_logs[$type]) && !isset($this->disabled_logs['all']);
 	}
 
 	/**
 	* This function allows disable the log-system. When add_log is called, the log will not be added to the database.
 	*
+	* @param	mixed	$type	The log type we want to enable. Empty to disable all logs.
+	*							Can also be an array of types
+	*
 	* @return	null
 	*/
-	public function disable()
+	public function disable($type = '')
 	{
-		$this->enabled = false;
+		if (is_array($type))
+		{
+			foreach ($type as $disable_type)
+			{
+				$this->disable($disable_type);
+			}
+			return;
+		}
+
+		if ($type == '' || $type == 'all')
+		{
+			$this->disabled_logs['all'] = true;
+			return;
+		}
+		$this->disabled_logs[$type] = true;
 	}
 
 	/**
 	* This function allows re-enable the log-system.
 	*
+	* @param	mixed	$type	The log type we want to enable. Empty to enable all logs.
+	*
 	* @return	null
 	*/
-	public function enable()
+	public function enable($type = '')
 	{
-		$this->enabled = true;
+		if (is_array($type))
+		{
+			foreach ($type as $enable_type)
+			{
+				$this->enable($enable_type);
+			}
+			return;
+		}
+
+		if ($type == '' || $type == 'all')
+		{
+			$this->disabled_logs = array();
+			return;
+		}
+		unset($this->disabled_logs[$type]);
 	}
 
 	/**
@@ -90,7 +129,7 @@ class phpbb_log implements phpbb_log_interface
 	*/
 	public function add($mode, $user_id, $log_ip, $log_operation, $log_time = false, $additional_data = array())
 	{
-		if (!$this->is_enabled())
+		if (!$this->is_enabled($mode))
 		{
 			return false;
 		}
