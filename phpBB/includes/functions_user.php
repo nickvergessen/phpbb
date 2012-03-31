@@ -289,23 +289,16 @@ function user_add($user_row, $cp_data = false)
 
 		if ($add_group_id)
 		{
-			global $phpbb_log;
-
-			// Because these actions only fill the log unneccessarily we skip the add_log() entry.
-			$phpbb_log->disable('admin');
-
 			// Add user to "newly registered users" group and set to default group if admin specified so.
 			if ($config['new_member_group_default'])
 			{
-				group_user_add($add_group_id, $user_id, false, false, true);
+				group_user_add($add_group_id, $user_id, false, false, true, 0, 0, false, true);
 				$user_row['group_id'] = $add_group_id;
 			}
 			else
 			{
-				group_user_add($add_group_id, $user_id);
+				group_user_add($add_group_id, $user_id, false, false, false, 0, 0, false, true);
 			}
-
-			$phpbb_log->enable('admin');
 		}
 	}
 
@@ -2840,7 +2833,7 @@ function group_delete($group_id, $group_name = false)
 *
 * @return mixed false if no errors occurred, else the user lang string for the relevant error, for example 'NO_USER'
 */
-function group_user_add($group_id, $user_id_ary = false, $username_ary = false, $group_name = false, $default = false, $leader = 0, $pending = 0, $group_attributes = false)
+function group_user_add($group_id, $user_id_ary = false, $username_ary = false, $group_name = false, $default = false, $leader = 0, $pending = 0, $group_attributes = false, $skip_log = false)
 {
 	global $db, $auth;
 
@@ -2926,7 +2919,10 @@ function group_user_add($group_id, $user_id_ary = false, $username_ary = false, 
 
 	$log = ($leader) ? 'LOG_MODS_ADDED' : (($pending) ? 'LOG_USERS_PENDING' : 'LOG_USERS_ADDED');
 
-	add_log('admin', $log, $group_name, implode(', ', $username_ary));
+	if (!$skip_log)
+	{
+		add_log('admin', $log, $group_name, implode(', ', $username_ary));
+	}
 
 	group_update_listings($group_id);
 

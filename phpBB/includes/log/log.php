@@ -23,11 +23,6 @@ if (!defined('IN_PHPBB'))
 class phpbb_log implements phpbb_log_interface
 {
 	/**
-	* Keeps the status of the log-system. Is the log enabled or disabled?
-	*/
-	private $disabled_logs;
-
-	/**
 	* Keeps the total log count of the last call to get_logs()
 	*/
 	private $logs_total;
@@ -50,76 +45,6 @@ class phpbb_log implements phpbb_log_interface
 	public function __construct($log_table)
 	{
 		$this->log_table = $log_table;
-		$this->enable();
-	}
-
-	/**
-	* This function returns the state of the log-system.
-	*
-	* @param	string	$type	The log type we want to check. Empty to get global log status.
-	*
-	* @return	bool	True if log for the type is enabled
-	*/
-	public function is_enabled($type = '')
-	{
-		if ($type == '' || $type == 'all')
-		{
-			return !isset($this->disabled_logs['all']);
-		}
-		return !isset($this->disabled_logs[$type]) && !isset($this->disabled_logs['all']);
-	}
-
-	/**
-	* This function allows disable the log-system. When add_log is called, the log will not be added to the database.
-	*
-	* @param	mixed	$type	The log type we want to enable. Empty to disable all logs.
-	*							Can also be an array of types
-	*
-	* @return	null
-	*/
-	public function disable($type = '')
-	{
-		if (is_array($type))
-		{
-			foreach ($type as $disable_type)
-			{
-				$this->disable($disable_type);
-			}
-			return;
-		}
-
-		if ($type == '' || $type == 'all')
-		{
-			$this->disabled_logs['all'] = true;
-			return;
-		}
-		$this->disabled_logs[$type] = true;
-	}
-
-	/**
-	* This function allows re-enable the log-system.
-	*
-	* @param	mixed	$type	The log type we want to enable. Empty to enable all logs.
-	*
-	* @return	null
-	*/
-	public function enable($type = '')
-	{
-		if (is_array($type))
-		{
-			foreach ($type as $enable_type)
-			{
-				$this->enable($enable_type);
-			}
-			return;
-		}
-
-		if ($type == '' || $type == 'all')
-		{
-			$this->disabled_logs = array();
-			return;
-		}
-		unset($this->disabled_logs[$type]);
 	}
 
 	/**
@@ -129,11 +54,6 @@ class phpbb_log implements phpbb_log_interface
 	*/
 	public function add($mode, $user_id, $log_ip, $log_operation, $log_time = false, $additional_data = array())
 	{
-		if (!$this->is_enabled($mode))
-		{
-			return false;
-		}
-
 		global $db;
 		/**
 		* @todo: enable when events are merged
