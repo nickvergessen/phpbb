@@ -3174,17 +3174,11 @@ function add_log()
 			$additional_data['reportee_id'] = array_shift($args);
 		break;
 		default:
-			/**
-			* @todo: enable when events are merged
-			*
-			global $phpbb_dispatcher;
-
 			if ($phpbb_dispatcher != null)
 			{
 				$vars = array('mode', 'args', 'additional_data');
-				extract($phpbb_dispatcher->trigger_event('core.function_add_log', $vars, $vars));
+				extract($phpbb_dispatcher->trigger_event('core.function_add_log', $vars));
 			}
-			*/
 	}
 	$log_operation = array_shift($args);
 	$additional_data = array_merge($additional_data, $args);
