@@ -55,6 +55,20 @@ interface phpbb_log_interface
 	public function get_logs($mode, $count_logs = true, $limit = 0, $offset = 0, $forum_id = 0, $topic_id = 0, $user_id = 0, $log_time = 0, $sort_by = 'l.log_time DESC', $keywords = '');
 
 	/**
+	* Get total log count
+	*
+	* @return	int			Returns the number of matching logs from the last call to get_logs()
+	*/
+	public function get_log_count();
+
+	/**
+	* Get offset of the last valid page
+	*
+	* @return	int			Returns the offset of the last valid page from the last call to get_logs()
+	*/
+	public function get_valid_offset();
+
+	/**
 	* Generates a sql condition out of the specified keywords
 	*
 	* @param	string	$keywords	The keywords the user specified to search for
@@ -85,18 +99,4 @@ interface phpbb_log_interface
 	* @return	array		Returns an array with the reportee data
 	*/
 	static public function get_reportee_data($reportee_ids);
-
-	/**
-	* Get total log count
-	*
-	* @return	int			Returns the number of matching logs from the last call to get_logs()
-	*/
-	public function get_log_count();
-
-	/**
-	* Get offset of the last valid page
-	*
-	* @return	int			Returns the offset of the last valid page from the last call to get_logs()
-	*/
-	public function get_valid_offset();
 }

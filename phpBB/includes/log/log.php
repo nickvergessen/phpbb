@@ -382,6 +382,26 @@ class phpbb_log implements phpbb_log_interface
 	}
 
 	/**
+	* Get total log count
+	*
+	* @return	int			Returns the number of matching logs from the last call to get_logs()
+	*/
+	public function get_log_count()
+	{
+		return ($this->logs_total) ? $this->logs_total : 0;
+	}
+
+	/**
+	* Get offset of the last valid log page
+	*
+	* @return	int			Returns the offset of the last valid page from the last call to get_logs()
+	*/
+	public function get_valid_offset()
+	{
+		return ($this->logs_offset) ? $this->logs_offset : 0;
+	}
+
+	/**
 	* Generates a sql condition out of the specified keywords
 	*
 	* {@inheritDoc}
@@ -489,25 +509,5 @@ class phpbb_log implements phpbb_log_interface
 		$db->sql_freeresult($result);
 
 		return $reportee_data_list;
-	}
-
-	/**
-	* Get total log count
-	*
-	* @return	int			Returns the number of matching logs from the last call to get_logs()
-	*/
-	public function get_log_count()
-	{
-		return ($this->logs_total) ? $this->logs_total : 0;
-	}
-
-	/**
-	* Get offset of the last valid log page
-	*
-	* @return	int			Returns the offset of the last valid page from the last call to get_logs()
-	*/
-	public function get_valid_offset()
-	{
-		return ($this->logs_offset) ? $this->logs_offset : 0;
 	}
 }
