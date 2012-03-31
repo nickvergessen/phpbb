@@ -30,7 +30,7 @@ class phpbb_log_add_test extends phpbb_database_test_case
 		$additional_data = array();
 
 		// Add an entry successful
-		$log = new phpbb_log(LOG_TABLE);
+		$log = new phpbb_log(LOG_TABLE, $db);
 		$this->assertEquals(1, $log->add($mode, $user_id, $log_ip, $log_operation, $log_time));
 
 		// Invalid mode specified

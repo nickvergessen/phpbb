@@ -141,7 +141,7 @@ foreach ($cache->obtain_hooks() as $hook)
 }
 
 // make sure add_log uses this log instance
-$phpbb_log = new phpbb_log(LOG_TABLE);
+$phpbb_log = new phpbb_log(LOG_TABLE, $db, $phpbb_dispatcher);
 add_log($phpbb_log); // "dependency injection" for a function
 // Parameter 2 and 3 are passed by reference, so we need to create a variable for it.
 $tmp_var = '';

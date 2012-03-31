@@ -3130,6 +3130,8 @@ function parse_cfg_file($filename, $lines = false)
 */
 function add_log()
 {
+	global $db, $phpbb_dispatcher;
+
 	// This is all just an ugly hack to add "Dependency Injection" to a function
 	// the only real code is the function call which maps this function to a method.
 	static $static_log = null;
@@ -3149,10 +3151,10 @@ function add_log()
 
 	$tmp_log = $static_log;
 
-	// no log class set, create a temporary one ourselves to keep backwards compatability
+	// no log class set, create a temporary one ourselves to keep backwards compatibility
 	if ($tmp_log === null)
 	{
-		$tmp_log = new phpbb_log(LOG_TABLE);
+		$tmp_log = new phpbb_log(LOG_TABLE, $db, $phpbb_dispatcher);
 	}
 
 	$mode = array_shift($args);
