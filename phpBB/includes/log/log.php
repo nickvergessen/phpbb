@@ -54,12 +54,7 @@ class phpbb_log implements phpbb_log_interface
 	*/
 	public function add($mode, $user_id, $log_ip, $log_operation, $log_time = false, $additional_data = array())
 	{
-		global $db;
-		/**
-		* @todo: enable when events are merged
-		*
 		global $db, $phpbb_dispatcher;
-		*/
 
 		if ($log_time == false)
 		{
@@ -114,15 +109,11 @@ class phpbb_log implements phpbb_log_interface
 			break;
 
 			default:
-				/**
-				* @todo: enable when events are merged
-				*
 				if ($phpbb_dispatcher != null)
 				{
 					$vars = array('mode', 'user_id', 'log_ip', 'log_operation', 'log_time', 'additional_data', 'sql_ary');
-					extract($phpbb_dispatcher->trigger_event('core.add_log_case', $vars, $vars));
+					extract($phpbb_dispatcher->trigger_event('core.add_log_case', $vars));
 				}
-				*/
 
 				// We didn't find a log_type, so we don't save it in the database.
 				if (!isset($sql_ary['log_type']))
@@ -131,15 +122,11 @@ class phpbb_log implements phpbb_log_interface
 				}
 		}
 
-		/**
-		* @todo: enable when events are merged
-		*
 		if ($phpbb_dispatcher != null)
 		{
 			$vars = array('mode', 'user_id', 'log_ip', 'log_operation', 'log_time', 'additional_data', 'sql_ary');
-			extract($phpbb_dispatcher->trigger_event('core.add_log', $vars, $vars));
+			extract($phpbb_dispatcher->trigger_event('core.add_log', $vars));
 		}
-		*/
 
 		$db->sql_query('INSERT INTO ' . $this->log_table . ' ' . $db->sql_build_array('INSERT', $sql_ary));
 
@@ -153,12 +140,7 @@ class phpbb_log implements phpbb_log_interface
 	*/
 	public function get_logs($mode, $count_logs = true, $limit = 0, $offset = 0, $forum_id = 0, $topic_id = 0, $user_id = 0, $log_time = 0, $sort_by = 'l.log_time DESC', $keywords = '')
 	{
-		global $db, $user, $auth, $phpEx, $phpbb_root_path, $phpbb_admin_path;
-		/**
-		* @todo: enable when events are merged
-		*
 		global $db, $user, $auth, $phpEx, $phpbb_root_path, $phpbb_admin_path, $phpbb_dispatcher;
-		*/
 
 		$this->logs_total = 0;
 		$this->logs_offset = $offset;
@@ -210,15 +192,12 @@ class phpbb_log implements phpbb_log_interface
 			default:
 				$log_type = null;
 				$sql_additional = '';
-				/**
-				* @todo: enable when events are merged
-				*
+
 				if ($phpbb_dispatcher != null)
 				{
 					$vars = array('mode', 'count_logs', 'limit', 'offset', 'forum_id', 'topic_id', 'user_id', 'log_time', 'sort_by', 'keywords', 'profile_url', 'log_type', 'sql_additional');
-					extract($phpbb_dispatcher->trigger_event('core.get_logs_switch_mode', $vars, $vars));
+					extract($phpbb_dispatcher->trigger_event('core.get_logs_switch_mode', $vars));
 				}
-				*/
 
 				if (!isset($log_type))
 				{
@@ -227,15 +206,11 @@ class phpbb_log implements phpbb_log_interface
 				}
 		}
 
-		/**
-		* @todo: enable when events are merged
-		*
 		if ($phpbb_dispatcher != null)
 		{
 			$vars = array('mode', 'count_logs', 'limit', 'offset', 'forum_id', 'topic_id', 'user_id', 'log_time', 'sort_by', 'keywords', 'profile_url', 'log_type', 'sql_additional');
-			extract($phpbb_dispatcher->trigger_event('core.get_logs_after_get_type', $vars, $vars));
+			extract($phpbb_dispatcher->trigger_event('core.get_logs_after_get_type', $vars));
 		}
-		*/
 
 		$sql_keywords = '';
 		if (!empty($keywords))
@@ -316,15 +291,11 @@ class phpbb_log implements phpbb_log_interface
 				'action'			=> (isset($user->lang[$row['log_operation']])) ? $user->lang[$row['log_operation']] : '{' . ucfirst(str_replace('_', ' ', $row['log_operation'])) . '}',
 			);
 
-			/**
-			* @todo: enable when events are merged
-			*
 			if ($phpbb_dispatcher != null)
 			{
 				$vars = array('log_entry_data', 'row');
-				extract($phpbb_dispatcher->trigger_event('core.get_logs_entry_data', $vars, $vars));
+				extract($phpbb_dispatcher->trigger_event('core.get_logs_entry_data', $vars));
 			}
-			*/
 
 			$log[$i] = $log_entry_data;
 
@@ -369,15 +340,11 @@ class phpbb_log implements phpbb_log_interface
 		}
 		$db->sql_freeresult($result);
 
-		/**
-		* @todo: enable when events are merged
-		*
 		if ($phpbb_dispatcher != null)
 		{
 			$vars = array('log', 'topic_id_list', 'reportee_id_list');
-			extract($phpbb_dispatcher->trigger_event('core.get_logs_additional_data', $vars, $vars));
+			extract($phpbb_dispatcher->trigger_event('core.get_logs_additional_data', $vars));
 		}
-		*/
 
 		if (sizeof($topic_id_list))
 		{
