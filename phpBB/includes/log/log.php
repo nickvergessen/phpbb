@@ -158,7 +158,7 @@ class phpbb_log implements phpbb_log_interface
 			case 'admin':
 				$sql_ary += array(
 					'log_type'		=> LOG_ADMIN,
-					'log_data'		=> (!sizeof($additional_data)) ? '' : serialize($additional_data),
+					'log_data'		=> (!empty($additional_data)) ? serialize($additional_data) : '',
 				);
 			break;
 
@@ -171,7 +171,7 @@ class phpbb_log implements phpbb_log_interface
 					'log_type'		=> LOG_MOD,
 					'forum_id'		=> $forum_id,
 					'topic_id'		=> $topic_id,
-					'log_data'		=> (!sizeof($additional_data)) ? '' : serialize($additional_data),
+					'log_data'		=> (!empty($additional_data)) ? serialize($additional_data) : '',
 				);
 			break;
 
@@ -182,14 +182,14 @@ class phpbb_log implements phpbb_log_interface
 				$sql_ary += array(
 					'log_type'		=> LOG_USERS,
 					'reportee_id'	=> $reportee_id,
-					'log_data'		=> (!sizeof($additional_data)) ? '' : serialize($additional_data),
+					'log_data'		=> (!empty($additional_data)) ? serialize($additional_data) : '',
 				);
 			break;
 
 			case 'critical':
 				$sql_ary += array(
 					'log_type'		=> LOG_CRITICAL,
-					'log_data'		=> (!sizeof($additional_data)) ? '' : serialize($additional_data),
+					'log_data'		=> (!empty($additional_data)) ? serialize($additional_data) : '',
 				);
 			break;
 
@@ -347,12 +347,12 @@ class phpbb_log implements phpbb_log_interface
 			// Return the user to the last page that is valid
 			while ($this->logs_offset >= $this->logs_total)
 			{
-				$this->logs_offset = ($this->logs_offset - $limit < 0) ? 0 : $this->logs_offset - $limit;
+				$this->logs_offset = max(0, $this->logs_offset - $limit);
 			}
 		}
 
-		$sql = "SELECT l.*, u.username, u.username_clean, u.user_colour
-			FROM " . LOG_TABLE . " l, " . USERS_TABLE . " u
+		$sql = 'SELECT l.*, u.username, u.username_clean, u.user_colour
+			FROM ' . LOG_TABLE . ' l, ' . USERS_TABLE . " u
 			WHERE l.log_type = $log_type
 				AND u.user_id = l.user_id
 				" . (($log_time) ? "AND l.log_time >= $log_time" : '') . "
@@ -411,7 +411,7 @@ class phpbb_log implements phpbb_log_interface
 			if (!empty($row['log_data']))
 			{
 				$log_data_ary = @unserialize($row['log_data']);
-				$log_data_ary = ($log_data_ary === false) ? array() : $log_data_ary;
+				$log_data_ary = ($log_data_ary !== false) ? $log_data_ary : array();
 
 				if (isset($user->lang[$row['log_operation']]))
 				{
