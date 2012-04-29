@@ -7,12 +7,10 @@
 *
 */
 
-require_once dirname(__FILE__) . '/../../phpBB/includes/auth.php';
 require_once dirname(__FILE__) . '/../../phpBB/includes/functions.php';
 require_once dirname(__FILE__) . '/../../phpBB/includes/functions_admin.php';
 require_once dirname(__FILE__) . '/../../phpBB/includes/functions_content.php';
 require_once dirname(__FILE__) . '/../../phpBB/includes/utf/utf_tools.php';
-require_once dirname(__FILE__) . '/../../phpBB/includes/session.php';
 require_once dirname(__FILE__) . '/../mock_user.php';
 require_once dirname(__FILE__) . '/../mock/cache.php';
 
@@ -306,7 +304,7 @@ class phpbb_log_function_view_log_test extends phpbb_database_test_case
 		$cache = new phpbb_mock_cache;
 
 		// Create auth mock
-		$auth = $this->getMock('auth');
+		$auth = $this->getMock('phpbb_auth');
 		$acl_get_map = array(
 			array('f_read', 23, true),
 			array('m_', 23, true),

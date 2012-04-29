@@ -2488,6 +2488,8 @@ function cache_moderators()
 */
 function view_log($mode, &$log, &$log_count, $limit = 0, $offset = 0, $forum_id = 0, $topic_id = 0, $user_id = 0, $limit_days = 0, $sort_by = 'l.log_time DESC', $keywords = '')
 {
+	global $db, $phpbb_dispatcher;
+
 	// This is all just an ugly hack to add "Dependency Injection" to a function
 	// the only real code is the function call which maps this function to a method.
 	static $static_log = null;
@@ -2507,7 +2509,7 @@ function view_log($mode, &$log, &$log_count, $limit = 0, $offset = 0, $forum_id 
 	// no log class set, create a temporary one ourselves to keep backwards compatability
 	if ($tmp_log === null)
 	{
-		$tmp_log = new phpbb_log(LOG_TABLE);
+		$tmp_log = new phpbb_log(LOG_TABLE, $db, $phpbb_dispatcher);
 	}
 
 	$count_logs = ($log_count !== false);

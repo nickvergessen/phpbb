@@ -289,23 +289,16 @@ function user_add($user_row, $cp_data = false)
 
 		if ($add_group_id)
 		{
-			global $phpbb_log;
-
-			// Because these actions only fill the log unneccessarily we skip the add_log() entry.
-			$phpbb_log->disable('admin');
-
 			// Add user to "newly registered users" group and set to default group if admin specified so.
 			if ($config['new_member_group_default'])
 			{
-				group_user_add($add_group_id, $user_id, false, false, true);
+				group_user_add($add_group_id, $user_id, false, false, true, 0, 0, false, true);
 				$user_row['group_id'] = $add_group_id;
 			}
 			else
 			{
-				group_user_add($add_group_id, $user_id);
+				group_user_add($add_group_id, $user_id, false, false, false, 0, 0, false, true);
 			}
-
-			$phpbb_log->enable('admin');
 		}
 	}
 
@@ -2840,7 +2833,7 @@ function group_delete($group_id, $group_name = false)
 *
 * @return mixed false if no errors occurred, else the user lang string for the relevant error, for example 'NO_USER'
 */
-function group_user_add($group_id, $user_id_ary = false, $username_ary = false, $group_name = false, $default = false, $leader = 0, $pending = 0, $group_attributes = false)
+function group_user_add($group_id, $user_id_ary = false, $username_ary = false, $group_name = false, $default = false, $leader = 0, $pending = 0, $group_attributes = false, $skip_log = false)
 {
 	global $db, $auth;
 
@@ -2926,7 +2919,10 @@ function group_user_add($group_id, $user_id_ary = false, $username_ary = false, 
 
 	$log = ($leader) ? 'LOG_MODS_ADDED' : (($pending) ? 'LOG_USERS_PENDING' : 'LOG_USERS_ADDED');
 
-	add_log('admin', $log, $group_name, implode(', ', $username_ary));
+	if (!$skip_log)
+	{
+		add_log('admin', $log, $group_name, implode(', ', $username_ary));
+	}
 
 	group_update_listings($group_id);
 
@@ -3692,4 +3688,37 @@ function remove_newly_registered($user_id, $user_data = false)
 	}
 
 	return $user_data['group_id'];
+}
+
+/**
+* Gets user ids of currently banned registered users.
+*
+* @param array $user_ids Array of users' ids to check for banning,
+*						leave empty to get complete list of banned ids
+* @return array	Array of banned users' ids if any, empty array otherwise
+*/
+function phpbb_get_banned_user_ids($user_ids = array())
+{
+	global $db;
+
+	$sql_user_ids = (!empty($user_ids)) ? $db->sql_in_set('ban_userid', $user_ids) : 'ban_userid <> 0';
+
+	// Get banned User ID's
+	// Ignore stale bans which were not wiped yet
+	$banned_ids_list = array();
+	$sql = 'SELECT ban_userid
+		FROM ' . BANLIST_TABLE . "
+		WHERE $sql_user_ids
+			AND ban_exclude <> 1
+			AND (ban_end > " . time() . '
+				OR ban_end = 0)';
+	$result = $db->sql_query($sql);
+	while ($row = $db->sql_fetchrow($result))
+	{
+		$user_id = (int) $row['ban_userid'];
+		$banned_ids_list[$user_id] = $user_id;
+	}
+	$db->sql_freeresult($result);
+
+	return $banned_ids_list;
 }

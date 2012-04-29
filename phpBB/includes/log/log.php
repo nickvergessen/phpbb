@@ -23,11 +23,6 @@ if (!defined('IN_PHPBB'))
 class phpbb_log implements phpbb_log_interface
 {
 	/**
-	* Keeps the status of the log-system. Is the log enabled or disabled?
-	*/
-	private $disabled_logs;
-
-	/**
 	* Keeps the total log count of the last call to get_logs()
 	*/
 	private $logs_total;
@@ -42,84 +37,20 @@ class phpbb_log implements phpbb_log_interface
 	*/
 	private $log_table;
 
+	private $db;
+
+	private $dispatcher;
+
 	/**
 	* Constructor
 	*
 	* @param	string	$log_table		The table we use to store our logs
 	*/
-	public function __construct($log_table)
+	public function __construct($log_table, dbal $db, phpbb_event_dispatcher $dispatcher = null)
 	{
 		$this->log_table = $log_table;
-		$this->enable();
-	}
-
-	/**
-	* This function returns the state of the log-system.
-	*
-	* @param	string	$type	The log type we want to check. Empty to get global log status.
-	*
-	* @return	bool	True if log for the type is enabled
-	*/
-	public function is_enabled($type = '')
-	{
-		if ($type == '' || $type == 'all')
-		{
-			return !isset($this->disabled_logs['all']);
-		}
-		return !isset($this->disabled_logs[$type]) && !isset($this->disabled_logs['all']);
-	}
-
-	/**
-	* This function allows disable the log-system. When add_log is called, the log will not be added to the database.
-	*
-	* @param	mixed	$type	The log type we want to enable. Empty to disable all logs.
-	*							Can also be an array of types
-	*
-	* @return	null
-	*/
-	public function disable($type = '')
-	{
-		if (is_array($type))
-		{
-			foreach ($type as $disable_type)
-			{
-				$this->disable($disable_type);
-			}
-			return;
-		}
-
-		if ($type == '' || $type == 'all')
-		{
-			$this->disabled_logs['all'] = true;
-			return;
-		}
-		$this->disabled_logs[$type] = true;
-	}
-
-	/**
-	* This function allows re-enable the log-system.
-	*
-	* @param	mixed	$type	The log type we want to enable. Empty to enable all logs.
-	*
-	* @return	null
-	*/
-	public function enable($type = '')
-	{
-		if (is_array($type))
-		{
-			foreach ($type as $enable_type)
-			{
-				$this->enable($enable_type);
-			}
-			return;
-		}
-
-		if ($type == '' || $type == 'all')
-		{
-			$this->disabled_logs = array();
-			return;
-		}
-		unset($this->disabled_logs[$type]);
+		$this->db = $db;
+		$this->dispatcher = $dispatcher;
 	}
 
 	/**
@@ -129,18 +60,6 @@ class phpbb_log implements phpbb_log_interface
 	*/
 	public function add($mode, $user_id, $log_ip, $log_operation, $log_time = false, $additional_data = array())
 	{
-		if (!$this->is_enabled($mode))
-		{
-			return false;
-		}
-
-		global $db;
-		/**
-		* @todo: enable when events are merged
-		*
-		global $db, $phpbb_dispatcher;
-		*/
-
 		if ($log_time == false)
 		{
 			$log_time = time();
@@ -194,15 +113,11 @@ class phpbb_log implements phpbb_log_interface
 			break;
 
 			default:
-				/**
-				* @todo: enable when events are merged
-				*
-				if ($phpbb_dispatcher != null)
+				if ($this->dispatcher != null)
 				{
 					$vars = array('mode', 'user_id', 'log_ip', 'log_operation', 'log_time', 'additional_data', 'sql_ary');
-					extract($phpbb_dispatcher->trigger_event('core.add_log_case', $vars, $vars));
+					extract($this->dispatcher->trigger_event('core.add_log_case', $vars));
 				}
-				*/
 
 				// We didn't find a log_type, so we don't save it in the database.
 				if (!isset($sql_ary['log_type']))
@@ -211,19 +126,16 @@ class phpbb_log implements phpbb_log_interface
 				}
 		}
 
-		/**
-		* @todo: enable when events are merged
-		*
-		if ($phpbb_dispatcher != null)
+		if ($this->dispatcher != null)
 		{
 			$vars = array('mode', 'user_id', 'log_ip', 'log_operation', 'log_time', 'additional_data', 'sql_ary');
-			extract($phpbb_dispatcher->trigger_event('core.add_log', $vars, $vars));
+			extract($this->dispatcher->trigger_event('core.add_log', $vars));
 		}
-		*/
 
-		$db->sql_query('INSERT INTO ' . $this->log_table . ' ' . $db->sql_build_array('INSERT', $sql_ary));
+		$this->db->sql_query('INSERT INTO ' . $this->log_table . ' ' .
+			$this->db->sql_build_array('INSERT', $sql_ary));
 
-		return $db->sql_nextid();
+		return $this->db->sql_nextid();
 	}
 
 	/**
@@ -233,12 +145,7 @@ class phpbb_log implements phpbb_log_interface
 	*/
 	public function get_logs($mode, $count_logs = true, $limit = 0, $offset = 0, $forum_id = 0, $topic_id = 0, $user_id = 0, $log_time = 0, $sort_by = 'l.log_time DESC', $keywords = '')
 	{
-		global $db, $user, $auth, $phpEx, $phpbb_root_path, $phpbb_admin_path;
-		/**
-		* @todo: enable when events are merged
-		*
-		global $db, $user, $auth, $phpEx, $phpbb_root_path, $phpbb_admin_path, $phpbb_dispatcher;
-		*/
+		global $user, $auth, $phpEx, $phpbb_root_path, $phpbb_admin_path;
 
 		$this->logs_total = 0;
 		$this->logs_offset = $offset;
@@ -264,7 +171,7 @@ class phpbb_log implements phpbb_log_interface
 				}
 				else if (is_array($forum_id))
 				{
-					$sql_additional = 'AND ' . $db->sql_in_set('l.forum_id', array_map('intval', $forum_id));
+					$sql_additional = 'AND ' . $this->db->sql_in_set('l.forum_id', array_map('intval', $forum_id));
 				}
 				else if ($forum_id)
 				{
@@ -290,15 +197,12 @@ class phpbb_log implements phpbb_log_interface
 			default:
 				$log_type = null;
 				$sql_additional = '';
-				/**
-				* @todo: enable when events are merged
-				*
-				if ($phpbb_dispatcher != null)
+
+				if ($this->dispatcher != null)
 				{
 					$vars = array('mode', 'count_logs', 'limit', 'offset', 'forum_id', 'topic_id', 'user_id', 'log_time', 'sort_by', 'keywords', 'profile_url', 'log_type', 'sql_additional');
-					extract($phpbb_dispatcher->trigger_event('core.get_logs_switch_mode', $vars, $vars));
+					extract($this->dispatcher->trigger_event('core.get_logs_switch_mode', $vars));
 				}
-				*/
 
 				if (!isset($log_type))
 				{
@@ -307,15 +211,11 @@ class phpbb_log implements phpbb_log_interface
 				}
 		}
 
-		/**
-		* @todo: enable when events are merged
-		*
-		if ($phpbb_dispatcher != null)
+		if ($this->dispatcher != null)
 		{
 			$vars = array('mode', 'count_logs', 'limit', 'offset', 'forum_id', 'topic_id', 'user_id', 'log_time', 'sort_by', 'keywords', 'profile_url', 'log_type', 'sql_additional');
-			extract($phpbb_dispatcher->trigger_event('core.get_logs_after_get_type', $vars, $vars));
+			extract($this->dispatcher->trigger_event('core.get_logs_after_get_type', $vars));
 		}
-		*/
 
 		$sql_keywords = '';
 		if (!empty($keywords))
@@ -333,9 +233,9 @@ class phpbb_log implements phpbb_log_interface
 					AND l.log_time >= $log_time
 					$sql_keywords
 					$sql_additional";
-			$result = $db->sql_query($sql);
-			$this->logs_total = (int) $db->sql_fetchfield('total_entries');
-			$db->sql_freeresult($result);
+			$result = $this->db->sql_query($sql);
+			$this->logs_total = (int) $this->db->sql_fetchfield('total_entries');
+			$this->db->sql_freeresult($result);
 
 			if ($this->logs_total == 0)
 			{
@@ -359,11 +259,11 @@ class phpbb_log implements phpbb_log_interface
 				$sql_keywords
 				$sql_additional
 			ORDER BY $sort_by";
-		$result = $db->sql_query_limit($sql, $limit, $this->logs_offset);
+		$result = $this->db->sql_query_limit($sql, $limit, $this->logs_offset);
 
 		$i = 0;
 		$log = array();
-		while ($row = $db->sql_fetchrow($result))
+		while ($row = $this->db->sql_fetchrow($result))
 		{
 			$row['forum_id'] = (int) $row['forum_id'];
 			if ($row['topic_id'])
@@ -396,15 +296,11 @@ class phpbb_log implements phpbb_log_interface
 				'action'			=> (isset($user->lang[$row['log_operation']])) ? $user->lang[$row['log_operation']] : '{' . ucfirst(str_replace('_', ' ', $row['log_operation'])) . '}',
 			);
 
-			/**
-			* @todo: enable when events are merged
-			*
-			if ($phpbb_dispatcher != null)
+			if ($this->dispatcher != null)
 			{
 				$vars = array('log_entry_data', 'row');
-				extract($phpbb_dispatcher->trigger_event('core.get_logs_entry_data', $vars, $vars));
+				extract($this->dispatcher->trigger_event('core.get_logs_entry_data', $vars));
 			}
-			*/
 
 			$log[$i] = $log_entry_data;
 
@@ -447,17 +343,13 @@ class phpbb_log implements phpbb_log_interface
 
 			$i++;
 		}
-		$db->sql_freeresult($result);
+		$this->db->sql_freeresult($result);
 
-		/**
-		* @todo: enable when events are merged
-		*
-		if ($phpbb_dispatcher != null)
+		if ($this->dispatcher != null)
 		{
 			$vars = array('log', 'topic_id_list', 'reportee_id_list');
-			extract($phpbb_dispatcher->trigger_event('core.get_logs_additional_data', $vars, $vars));
+			extract($this->dispatcher->trigger_event('core.get_logs_additional_data', $vars));
 		}
-		*/
 
 		if (sizeof($topic_id_list))
 		{
@@ -487,6 +379,26 @@ class phpbb_log implements phpbb_log_interface
 		}
 
 		return $log;
+	}
+
+	/**
+	* Get total log count
+	*
+	* @return	int			Returns the number of matching logs from the last call to get_logs()
+	*/
+	public function get_log_count()
+	{
+		return ($this->logs_total) ? $this->logs_total : 0;
+	}
+
+	/**
+	* Get offset of the last valid log page
+	*
+	* @return	int			Returns the offset of the last valid page from the last call to get_logs()
+	*/
+	public function get_valid_offset()
+	{
+		return ($this->logs_offset) ? $this->logs_offset : 0;
 	}
 
 	/**
@@ -597,25 +509,5 @@ class phpbb_log implements phpbb_log_interface
 		$db->sql_freeresult($result);
 
 		return $reportee_data_list;
-	}
-
-	/**
-	* Get total log count
-	*
-	* @return	int			Returns the number of matching logs from the last call to get_logs()
-	*/
-	public function get_log_count()
-	{
-		return ($this->logs_total) ? $this->logs_total : 0;
-	}
-
-	/**
-	* Get offset of the last valid log page
-	*
-	* @return	int			Returns the offset of the last valid page from the last call to get_logs()
-	*/
-	public function get_valid_offset()
-	{
-		return ($this->logs_offset) ? $this->logs_offset : 0;
 	}
 }
