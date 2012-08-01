@@ -1400,7 +1400,7 @@ class install_install extends module
 		$db->sql_connect($data['dbhost'], $data['dbuser'], htmlspecialchars_decode($data['dbpasswd']), $data['dbname'], $data['dbport'], false, false);
 
 		// We need to fill the config to let internal functions correctly work
-		$config = new phpbb_config_db($db, new phpbb_cache_driver_null, CONFIG_TABLE);
+		$config = new phpbb_config_db($db, new phpbb_cache_driver_null, $table_prefix . 'config');
 
 		// Set default config data
 		$copy_config_from_data = array(
