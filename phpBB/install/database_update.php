@@ -25,7 +25,7 @@ if (!function_exists('phpbb_require_updated'))
 {
 	function phpbb_require_updated($path, $optional = false)
 	{
-		global $phpbb_root_path;
+		global $phpbb_root_path, $table_prefix;
 
 		$new_path = $phpbb_root_path . 'install/update/new/' . $path;
 		$old_path = $phpbb_root_path . $path;
@@ -37,6 +37,26 @@ if (!function_exists('phpbb_require_updated'))
 		else if (!$optional || file_exists($old_path))
 		{
 			require($old_path);
+		}
+	}
+}
+
+if (!function_exists('phpbb_include_updated'))
+{
+	function phpbb_include_updated($path, $optional = false)
+	{
+		global $phpbb_root_path;
+
+		$new_path = $phpbb_root_path . 'install/update/new/' . $path;
+		$old_path = $phpbb_root_path . $path;
+
+		if (file_exists($new_path))
+		{
+			include($new_path);
+		}
+		else if (!$optional || file_exists($old_path))
+		{
+			include($old_path);
 		}
 	}
 }
@@ -82,30 +102,35 @@ $phpbb_adm_relative_path = (isset($phpbb_adm_relative_path)) ? $phpbb_adm_relati
 $phpbb_admin_path = (defined('PHPBB_ADMIN_PATH')) ? PHPBB_ADMIN_PATH : $phpbb_root_path . $phpbb_adm_relative_path;
 
 // Include files
-require($phpbb_root_path . 'phpbb/class_loader.' . $phpEx);
+phpbb_require_updated('phpbb/class_loader.' . $phpEx);
 
-require($phpbb_root_path . 'includes/functions.' . $phpEx);
-require($phpbb_root_path . 'includes/functions_content.' . $phpEx);
-require($phpbb_root_path . 'includes/functions_container.' . $phpEx);
+phpbb_require_updated('includes/functions.' . $phpEx);
+phpbb_require_updated('includes/functions_content.' . $phpEx);
+phpbb_require_updated('includes/functions_container.' . $phpEx);
 
-require($phpbb_root_path . 'includes/constants.' . $phpEx);
-require($phpbb_root_path . 'includes/utf/utf_tools.' . $phpEx);
+require($phpbb_root_path . 'config.' . $phpEx);
+phpbb_require_updated('includes/constants.' . $phpEx);
+phpbb_require_updated('includes/utf/utf_tools.' . $phpEx);
 
 // Set PHP error handler to ours
 set_error_handler(defined('PHPBB_MSG_HANDLER') ? PHPBB_MSG_HANDLER : 'msg_handler');
 
 // Setup class loader first
+$phpbb_class_loader_new = new phpbb_class_loader('phpbb_', "{$phpbb_root_path}install/update/new/phpbb/", $phpEx);
+$phpbb_class_loader_new->register();
 $phpbb_class_loader = new phpbb_class_loader('phpbb_', "{$phpbb_root_path}phpbb/", $phpEx);
 $phpbb_class_loader->register();
 
 // Set up container (must be done here because extensions table may not exist)
+$other_config_path = $phpbb_root_path . 'install/update/new/config/';
+$config_path = file_exists($other_config_path . 'services.yml') ? $other_config_path : $phpbb_root_path . 'config/';
+
 $container_extensions = array(
 	new phpbb_di_extension_config($phpbb_root_path . 'config.' . $phpEx),
-	new phpbb_di_extension_core($phpbb_root_path),
+	new phpbb_di_extension_core($config_path),
 );
 $container_passes = array(
 	new phpbb_di_pass_collection_pass(),
-	//new phpbb_di_pass_kernel_pass(),
 );
 $phpbb_container = phpbb_create_container($container_extensions, $phpbb_root_path, $phpEx);
 
@@ -264,7 +289,7 @@ while (!$migrator->finished())
 	if ((time() - $update_start_time) >= $safe_time_limit)
 	{
 		echo $user->lang['DATABASE_UPDATE_NOT_COMPLETED'] . '<br />';
-		echo '<a href="' . append_sid($phpbb_root_path . 'install/database_update.' . $phpEx, 'type=' . $request->variable('type', 0) . '&amp;language=' . $user->lang['USER_LANG']) . '">' . $user->lang['DATABASE_UPDATE_CONTINUE'] . '</a>';
+		echo '<a href="' . append_sid($phpbb_root_path . 'install/database_update.' . $phpEx, 'type=' . $request->variable('type', 0) . '&amp;language=' . $request->variable('language', 'en')) . '">' . $user->lang['DATABASE_UPDATE_CONTINUE'] . '</a>';
 
 		phpbb_end_update($cache, $config);
 	}
@@ -280,7 +305,7 @@ echo $user->lang['DATABASE_UPDATE_COMPLETE'] . '<br />';
 if ($request->variable('type', 0))
 {
 	echo $user->lang['INLINE_UPDATE_SUCCESSFUL'] . '<br /><br />';
-	echo '<a href="' . append_sid($phpbb_root_path . 'install/index.' . $phpEx, 'mode=update&amp;sub=file_check&amp;language=' . $user->lang['USER_LANG']) . '" class="button1">' . $user->lang['CONTINUE_UPDATE_NOW'] . '</a>';
+	echo '<a href="' . append_sid($phpbb_root_path . 'install/index.' . $phpEx, 'mode=update&amp;sub=file_check&amp;language=' . $request->variable('language', 'en')) . '" class="button1">' . $user->lang['CONTINUE_UPDATE_NOW'] . '</a>';
 }
 else
 {
