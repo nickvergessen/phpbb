@@ -1874,9 +1874,9 @@ class tools
 				else
 				{
 					$sql = "SELECT dobj.name AS def_name
-					FROM sys.columns col 
+					FROM sys.columns col
 						LEFT OUTER JOIN sys.objects dobj ON (dobj.object_id = col.default_object_id AND dobj.type = 'D')
-					WHERE col.object_id = object_id('{$table_name}') 
+					WHERE col.object_id = object_id('{$table_name}')
 					AND col.name = '{$column_name}'
 					AND dobj.name IS NOT NULL";
 					$result = $this->db->sql_query($sql);
@@ -2371,8 +2371,6 @@ class tools
 
 			case 'mssql':
 			case 'mssqlnative':
-				$statements[] = 'ALTER TABLE [' . $table_name . '] ALTER COLUMN [' . $column_name . '] ' . $column_data['column_type_sql'];
-
 				if (!empty($column_data['default']))
 				{
 					$sql = "SELECT CAST(SERVERPROPERTY('productversion') AS VARCHAR(25)) AS mssql_version";
@@ -2404,9 +2402,9 @@ class tools
 					{
 						$statements[] = "DECLARE @drop_default_name VARCHAR(100), @cmd VARCHAR(1000)
 							SET @drop_default_name =
-								(SELECT dobj.name FROM sys.columns col 
+								(SELECT dobj.name FROM sys.columns col
 									LEFT OUTER JOIN sys.objects dobj ON (dobj.object_id = col.default_object_id AND dobj.type = 'D')
-								WHERE col.object_id = object_id('{$table_name}') 
+								WHERE col.object_id = object_id('{$table_name}')
 								AND col.name = '{$column_name}'
 								AND dobj.name IS NOT NULL)
 							IF @drop_default_name <> ''
@@ -2418,6 +2416,8 @@ class tools
 							EXEC(@cmd)";
 					}
 				}
+
+				$statements[] = 'ALTER TABLE [' . $table_name . '] ALTER COLUMN [' . $column_name . '] ' . $column_data['column_type_sql'];
 			break;
 
 			case 'mysql_40':
