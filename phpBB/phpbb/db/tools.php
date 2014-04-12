@@ -2395,7 +2395,9 @@ class tools
 								SET @cmd = 'ALTER TABLE [{$table_name}] DROP CONSTRAINT [' + @drop_default_name + ']'
 								EXEC(@cmd)
 							END
-							SET @cmd = 'ALTER TABLE [{$table_name}] ADD CONSTRAINT [DF_{$table_name}_{$column_name}_1] {$column_data['default']} FOR [{$column_name}]'
+							SET @cmd = 'ALTER TABLE [{$table_name}] ALTER COLUMN [{$column_name}] {$column_data['column_type_sql']}'
+							EXEC(@cmd)
+							SET @cmd = 'ALTER TABLE [{$table_name}] ADD CONSTRAINT [DF_{$table_name}_{$column_name}_1] {$this->db->sql_escape($column_data['default'])} FOR [{$column_name}]'
 							EXEC(@cmd)";
 					}
 					else
@@ -2412,12 +2414,12 @@ class tools
 								SET @cmd = 'ALTER TABLE [{$table_name}] DROP CONSTRAINT [' + @drop_default_name + ']'
 								EXEC(@cmd)
 							END
-							SET @cmd = 'ALTER TABLE [{$table_name}] ADD CONSTRAINT [DF_{$table_name}_{$column_name}_1] {$column_data['default']} FOR [{$column_name}]'
+							SET @cmd = 'ALTER TABLE [{$table_name}] ALTER COLUMN [{$column_name}] {$column_data['column_type_sql']}'
+							EXEC(@cmd)
+							SET @cmd = 'ALTER TABLE [{$table_name}] ADD CONSTRAINT [DF_{$table_name}_{$column_name}_1] {$this->db->sql_escape($column_data['default'])} FOR [{$column_name}]'
 							EXEC(@cmd)";
 					}
 				}
-
-				$statements[] = 'ALTER TABLE [' . $table_name . '] ALTER COLUMN [' . $column_name . '] ' . $column_data['column_type_sql'];
 			break;
 
 			case 'mysql_40':
