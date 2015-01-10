@@ -13,17 +13,33 @@
 
 abstract class phpbb_cache_common_test_case extends phpbb_database_test_case
 {
-	public function test_get_put_exists()
+	/** @var \phpbb\cache\driver\driver_interface */
+	protected $driver;
+
+	public function get_put_exists_data()
 	{
-		$this->assertFalse($this->driver->_exists('test_key'));
-		$this->assertSame(false, $this->driver->get('test_key'));
+		return array(
+			array('test_key'),
+			array('test/key'),
+			array('_test_key'),
+			array('_test/key'),
+		);
+	}
 
-		$this->driver->put('test_key', 'test_value');
+	/**
+	 * @dataProvider get_put_exists_data
+	 */
+	public function test_get_put_exists($key_name)
+	{
+		$this->assertFalse($this->driver->_exists($key_name));
+		$this->assertSame(false, $this->driver->get($key_name));
 
-		$this->assertTrue($this->driver->_exists('test_key'));
+		$this->driver->put($key_name, 'test_value');
+
+		$this->assertTrue($this->driver->_exists($key_name));
 		$this->assertEquals(
 			'test_value',
-			$this->driver->get('test_key'),
+			$this->driver->get($key_name),
 			'File ACM put and get'
 		);
 	}
@@ -69,7 +85,7 @@ abstract class phpbb_cache_common_test_case extends phpbb_database_test_case
 	public function test_cache_sql()
 	{
 		global $db, $cache, $phpbb_root_path, $phpEx;
-		$config = new phpbb\config\config(array());
+		$config = new \phpbb\config\config(array());
 		$db = $this->new_dbal();
 		$cache = new \phpbb\cache\service($this->driver, $config, $db, $phpbb_root_path, $phpEx);
 
@@ -82,7 +98,7 @@ abstract class phpbb_cache_common_test_case extends phpbb_database_test_case
 		$this->assertEquals($expected, $first_result);
 
 		$sql = 'DELETE FROM phpbb_config';
-		$result = $db->sql_query($sql);
+		$db->sql_query($sql);
 
 		$sql = "SELECT * FROM phpbb_config
 			WHERE config_name = 'foo'";

@@ -279,7 +279,7 @@ class file extends \phpbb\cache\driver\base
 		if ($var_name[0] == '_')
 		{
 			global $phpEx;
-			$var_name = str_replace('/', '_', $var_name);
+			$var_name = str_replace('/', '-', $var_name);
 			return file_exists($this->cache_dir . 'data' . $var_name . ".$phpEx");
 		}
 		else
@@ -335,7 +335,7 @@ class file extends \phpbb\cache\driver\base
 	{
 		global $phpEx;
 
-		$filename = str_replace('/', '_', $filename);
+		$filename = str_replace('/', '-', $filename);
 		$file = "{$this->cache_dir}$filename.$phpEx";
 
 		$type = substr($filename, 0, strpos($filename, '_'));
@@ -518,7 +518,7 @@ class file extends \phpbb\cache\driver\base
 	{
 		global $phpEx;
 
-		$filename = str_replace('/', '_', $filename);
+		$filename = str_replace('/', '-', $filename);
 		$file = "{$this->cache_dir}$filename.$phpEx";
 
 		$lock = new \phpbb\lock\flock($file);
