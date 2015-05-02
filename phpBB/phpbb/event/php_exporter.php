@@ -25,6 +25,12 @@ class php_exporter
 	/** @var string phpBB Root Path */
 	protected $root_path;
 
+	/** @var string The minimum version for the events to return */
+	protected $min_version;
+
+	/** @var string The maximum version for the events to return */
+	protected $max_version;
+
 	/** @var string */
 	protected $current_file;
 
@@ -43,14 +49,18 @@ class php_exporter
 	/**
 	* @param string $phpbb_root_path
 	* @param mixed $extension	String 'vendor/ext' to filter, null for phpBB core
+	* @param string $min_version
+	* @param string $max_version
 	*/
-	public function __construct($phpbb_root_path, $extension = null)
+	public function __construct($phpbb_root_path, $extension = null, $min_version = null, $max_version = null)
 	{
 		$this->root_path = $phpbb_root_path;
 		$this->path = $phpbb_root_path;
 		$this->events = $this->file_lines = array();
 		$this->current_file = $this->current_event = '';
 		$this->current_event_line = 0;
+		$this->min_version = $min_version;
+		$this->max_version = $max_version;
 
 		$this->path = $this->root_path;
 		if ($extension)
@@ -214,6 +224,17 @@ class php_exporter
 					// Validate @since
 					$since_line_num = $this->find_since();
 					$since = $this->validate_since($this->file_lines[$since_line_num]);
+
+					$changed = $this->find_changed('changed');
+					foreach ($changed as $changed_line_num) {
+						var_dump($this->current_event, $changed_line_num, $this->file_lines[$changed_line_num]);
+					}
+
+					if ($this->min_version && phpbb_version_compare($this->min_version, $since, '>')
+					 || $this->max_version && phpbb_version_compare($this->max_version, $since, '<'))
+					{
+						continue;
+					}
 
 					// Find event description line
 					$description_line_num = $this->find_description();
@@ -449,6 +470,33 @@ class php_exporter
 	}
 
 	/**
+	* Find the "@changed" Information lines
+	*
+	* @param string $tag_name Should be 'changed' or 'change'
+	* @return array Absolute line numbers
+	* @throws \LogicException
+	*/
+	public function find_changed($tag_name)
+	{
+		$lines = array();
+		$last_line = 0;
+		try
+		{
+			while ($line = $this->find_tag($tag_name, array('since'), $last_line))
+			{
+				$lines[] = $line;
+				$last_line = $line;
+			}
+		}
+		catch (\LogicException $e)
+		{
+			// Not changed? No problem!
+		}
+
+		return $lines;
+	}
+
+	/**
 	* Find the "@event" Information line
 	*
 	* @return int Absolute line number
@@ -464,12 +512,13 @@ class php_exporter
 	* @param string $find_tag		Name of the tag we are trying to find
 	* @param array $disallowed_tags		List of tags that must not appear between
 	*									the tag and the actual event
+	* @param int $skip_to_line		Skip lines until this one
 	* @return int Absolute line number
 	* @throws \LogicException
 	*/
-	public function find_tag($find_tag, $disallowed_tags)
+	public function find_tag($find_tag, $disallowed_tags, $skip_to_line = 0)
 	{
-		$find_tag_line = 0;
+		$find_tag_line = $skip_to_line ? $this->current_event_line - $skip_to_line + 1 : 0;
 		$found_comment_end = false;
 		while (strpos(ltrim($this->file_lines[$this->current_event_line - $find_tag_line], "\t "), '* @' . $find_tag . ' ') !== 0)
 		{
